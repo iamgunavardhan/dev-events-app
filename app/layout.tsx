@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Schibsted_Grotesk, Martian_Mono} from "next/font/google";
 import "./globals.css";
