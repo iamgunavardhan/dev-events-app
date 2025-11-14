@@ -153,7 +153,7 @@ EventSchema.pre('save', function (next) {
 // Create unique index on slug for faster queries and uniqueness constraint
 EventSchema.index({ slug: 1 }, { unique: true });
 
-// Prevent model recompilation during development (Next.js hot reload)
+// Prevent model recompilation during development time (Next.js hot reload)
 const Event: Model<IEvent> =
   mongoose.models.Event || mongoose.model<IEvent>('Event', EventSchema);
 

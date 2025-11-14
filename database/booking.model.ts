@@ -64,7 +64,7 @@ BookingSchema.pre('save', async function (next) {
 // Create index on eventId for faster queries when fetching bookings by event
 BookingSchema.index({ eventId: 1 });
 
-// Prevent model recompilation during development (Next.js hot reload)
+// Prevent model recompilation during development time (Next.js hot reload)
 const Booking: Model<IBooking> =
   mongoose.models.Booking || mongoose.model<IBooking>('Booking', BookingSchema);
 
