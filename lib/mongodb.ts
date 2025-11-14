@@ -26,7 +26,7 @@ interface MongooseCache {
  */
 type GlobalWithMongoose = typeof globalThis & { mongoose?: MongooseCache };
 
-const globalForMongoose = globalThis as GlobalWithMongoose;+
+const globalForMongoose = globalThis as GlobalWithMongoose;
 let cached: MongooseCache =
   globalForMongoose.mongoose ?? { conn: null, promise: null };
 
