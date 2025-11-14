@@ -19,21 +19,20 @@ interface MongooseCache {
   promise: Promise<typeof mongoose> | null;
 }
 
-+/**
-+ * Cache the mongoose connection to prevent multiple connections.
-+ * Use `globalThis` plus a typed helper to avoid `noRedeclare` issues
-+ * and work in both Node and edge runtimes.
-+ */
-+type GlobalWithMongoose = typeof globalThis & { mongoose?: MongooseCache };
-+
-+const globalForMongoose = globalThis as GlobalWithMongoose;
-+
-+let cached: MongooseCache =
-+  globalForMongoose.mongoose ?? { conn: null, promise: null };
-+
-+if (!globalForMongoose.mongoose) {
-+  globalForMongoose.mongoose = cached;
-+}
+/**
+ * Cache the mongoose connection to prevent multiple connections.
+ * Use `globalThis` plus a typed helper to avoid `noRedeclare` issues
+ * and work in both Node and edge runtimes.
+ */
+type GlobalWithMongoose = typeof globalThis & { mongoose?: MongooseCache };
+
+const globalForMongoose = globalThis as GlobalWithMongoose;+
+let cached: MongooseCache =
+  globalForMongoose.mongoose ?? { conn: null, promise: null };
+
+if (!globalForMongoose.mongoose) {
+  globalForMongoose.mongoose = cached;
+}
 
 /**
  * Establishes a connection to MongoDB using Mongoose
