@@ -11,7 +11,7 @@ export interface IEvent extends Document {
     location: string;
     date: string;
     time: string;
-    mode: string;
+    mode: 'online' | 'offline' | 'hybrid';
     audience: string;
     agenda: string[];
     organizer: string;
