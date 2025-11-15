@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
                event.tags = formData.getAll('tags').map(String);
 
         const CreatedEvent = await Event.create(event);
-        return  NextResponse.json({message:"Event created successfully.",event: CreatedEvent},{status:201});
+        return  NextResponse.json({message:"The Event created successfully.",event: CreatedEvent},{status:201});
 
     } catch (e) {
               console.error(e);
