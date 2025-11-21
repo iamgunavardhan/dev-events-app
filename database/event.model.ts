@@ -121,30 +121,39 @@ EventSchema.virtual('id').get(function () {
     return rawId && rawId.toHexString ? rawId.toHexString() : String(rawId);
 });
 
-// Pre-save hook for slug generation and data normalization
+// Pre-save hook for slug generation and data normalization (made resilient)
 EventSchema.pre('save', function (next) {
-    const event = this as IEvent & { isModified(key: string): boolean; isNew: boolean; slug?: string; date?: string; time?: string };
+    const event = this as IEvent & { isModified?(key: string): boolean; isNew?: boolean; slug?: string; date?: string; time?: string; title?: string };
 
-    // Generate slug only if title changed or document is new
-    if ((event as any).isModified?.('title') || (event as any).isNew) {
-        event.slug = generateSlug((event as any).title);
+    try {
+        // Generate slug only if title changed or document is new AND title exists
+        if (typeof event.title === 'string' && ((event.isModified && event.isModified('title')) || event.isNew)) {
+            event.slug = generateSlug(event.title);
+        }
+
+        // Normalize date to ISO format if it's modified and looks parseable
+        if (event.isModified && event.isModified('date') && typeof event.date === 'string' && event.date.trim() !== '') {
+            // normalizeDate no longer throws; returns original if invalid
+            event.date = normalizeDate(event.date);
+        }
+
+        // Normalize time format (HH:MM) — normalizeTime will return original on invalid input
+        if (event.isModified && event.isModified('time') && typeof event.time === 'string' && event.time.trim() !== '') {
+            event.time = normalizeTime(event.time);
+        }
+
+        next();
+    } catch (err) {
+        // Log but do not throw here — keep save tolerant to avoid crashing API responses
+        console.error('Event pre-save normalization error (non-fatal):', err);
+        // continue without blocking save
+        next();
     }
-
-    // Normalize date to ISO format if it's not already
-    if ((event as any).isModified?.('date')) {
-        event.date = normalizeDate(event.date);
-    }
-
-    // Normalize time format (HH:MM)
-    if ((event as any).isModified?.('time')) {
-        event.time = normalizeTime(event.time);
-    }
-
-    next();
 });
 
 // Helper function to generate URL-friendly slug
 function generateSlug(title: string): string {
+    if (!title || typeof title !== 'string') return '';
     return title
         .toLowerCase()
         .trim()
@@ -155,25 +164,32 @@ function generateSlug(title: string): string {
 }
 
 // Helper function to normalize date to ISO format
+// NOTE: returns original input on invalid parse instead of throwing
 function normalizeDate(dateString: string): string {
+    if (!dateString || typeof dateString !== 'string') return dateString;
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-        throw new Error('Invalid date format');
+        // Invalid date — return original string and log
+        console.warn('normalizeDate: invalid date, leaving original value:', dateString);
+        return dateString;
     }
     return date.toISOString().split('T')[0]; // Return YYYY-MM-DD format
 }
 
 // Helper function to normalize time format
+// NOTE: returns original input on invalid parse instead of throwing
 function normalizeTime(timeString: string): string {
+    if (!timeString || typeof timeString !== 'string') return timeString;
     // Handle various time formats and convert to HH:MM (24-hour format)
     const timeRegex = /^(\d{1,2}):(\d{2})(\s*(AM|PM))?$/i;
     const match = timeString.trim().match(timeRegex);
 
     if (!match) {
-        throw new Error('Invalid time format. Use HH:MM or HH:MM AM/PM');
+        console.warn('normalizeTime: invalid time format, leaving original value:', timeString);
+        return timeString;
     }
 
-    let hours = parseInt(match[1]);
+    let hours = parseInt(match[1], 10);
     const minutes = match[2];
     const period = match[4]?.toUpperCase();
 
@@ -183,15 +199,17 @@ function normalizeTime(timeString: string): string {
         if (period === 'AM' && hours === 12) hours = 0;
     }
 
-    if (hours < 0 || hours > 23 || parseInt(minutes) < 0 || parseInt(minutes) > 59) {
-        throw new Error('Invalid time values');
+    if (hours < 0 || hours > 23 || parseInt(minutes, 10) < 0 || parseInt(minutes, 10) > 59) {
+        console.warn('normalizeTime: invalid time values, leaving original value:', timeString);
+        return timeString;
     }
 
     return `${hours.toString().padStart(2, '0')}:${minutes}`;
 }
 
 // Create unique index on slug for better performance and uniqueness
-EventSchema.index({ slug: 1 }, { unique: true });
+// Make index creation background-friendly to avoid startup blocking errors
+EventSchema.index({ slug: 1 }, { unique: true, background: true });
 
 // Create compound index for common queries
 EventSchema.index({ date: 1, mode: 1 });
