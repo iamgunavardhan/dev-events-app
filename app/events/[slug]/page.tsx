@@ -10,15 +10,15 @@ import {cacheLife} from "next/cache";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 const EventDetailItem = ({icon, alt, lable}:{icon:string, alt:string, lable:string}) => (
-   <div className="flex-row-gap-2 items-center">
-       <Image src={icon} alt={alt} width={17} height={17}/>
-       <p>{lable}</p>
-   </div>
+    <div className="flex-row-gap-2 items-center">
+        <Image src={icon} alt={alt} width={17} height={17}/>
+        <p>{lable}</p>
+    </div>
 )
 
 const EventAgenda = ({agendaItems} : {agendaItems:string[]}) => (
     <div className="agenda">
-       <h2>Agenda</h2>
+        <h2>Agenda</h2>
         <ul>
             {agendaItems.map(item => (
                 <li key={item}>{item}</li>
@@ -42,22 +42,36 @@ const EventDetailsPage = async ({params} : { params : Promise<{slug: string}>}) 
 
     let event
     try {
-        const request = await fetch(`${BASE_URL}/api/events/${slug}`, {
-            next: {revalidate: 60}
-        })
+        // --- START: robust fetch + parse (REPLACEMENT) ---
+        const request = await fetch(`${BASE_URL}/api/events/${encodeURIComponent(slug)}`, {
+            next: { revalidate: 60 },
+        });
+
+        // handle non-OK responses explicitly and log raw body for debugging
         if (!request.ok) {
-            if(request.status === 404) {
-                return notFound()
-            }
-            throw new Error(`Failed to fetch event:${request.statusText}`);
+            const raw = await request.text().catch(() => null);
+            console.error(`Failed to fetch event for slug="${slug}" (status=${request.status}):`, raw);
+            if (request.status === 404) return notFound();
+            return notFound();
         }
 
-        const response = await request.json();
-        event = response.event as IEvent
+        // parse JSON safely
+        let parsed: any;
+        try {
+            parsed = await request.json();
+        } catch (err) {
+            console.error('Error parsing JSON from events API:', err);
+            return notFound();
+        }
+
+        // support multiple shapes: { data: event }, { event }, or plain event object
+        event = parsed?.data ?? parsed?.event ?? parsed;
 
         if (!event) {
-            return notFound()
+            console.warn('Event missing in API response (raw):', parsed);
+            return notFound();
         }
+        // --- END: robust fetch + parse ---
     } catch (error) {
         console.error('Error in fetching event:', error);
         return notFound()
@@ -75,14 +89,14 @@ const EventDetailsPage = async ({params} : { params : Promise<{slug: string}>}) 
     return (
         <section id="event">
             <div className="header">
-              <h1>Event Description</h1>
-              <p>{description}</p>
+                <h1>Event Description</h1>
+                <p>{description}</p>
             </div>
 
             <div className="details">
                 {/*left side - Event content */}
                 <div className="content">
-                  <Image src={image} alt="Event Banner" width={800} height={800} className="banner
+                    <Image src={image} alt="Event Banner" width={800} height={800} className="banner
                   "/>
 
                     <section className="flex-col-gap-2">
@@ -111,18 +125,18 @@ const EventDetailsPage = async ({params} : { params : Promise<{slug: string}>}) 
 
                 {/*right side - Event content */}
                 <aside className="booking">
-                   <div className="signup-card">
-                       <h2>Book Your Spot</h2>
-                       {bookings > 0 ? (
-                           <p className="text-sm">
-                               Join {bookings} people who have already booked their spot!
-                           </p>
-                       ) : (
-                           <p className="text-sm">Be the first to book your spot!</p>
-                       )}
+                    <div className="signup-card">
+                        <h2>Book Your Spot</h2>
+                        {bookings > 0 ? (
+                            <p className="text-sm">
+                                Join {bookings} people who have already booked their spot!
+                            </p>
+                        ) : (
+                            <p className="text-sm">Be the first to book your spot!</p>
+                        )}
 
-                       <BookEvent eventId={event.id} slug={event.slug}/>
-                   </div>
+                        <BookEvent eventId={event.id} slug={event.slug}/>
+                    </div>
                 </aside>
             </div>
 
