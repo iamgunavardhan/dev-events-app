@@ -1,7 +1,9 @@
+// database/event.model.ts
 import { Schema, model, models, Document } from 'mongoose';
 
 // TypeScript interface for Event document
 export interface IEvent extends Document {
+    id?: string; // virtual id mapped from _id
     title: string;
     slug: string;
     description: string;
@@ -106,25 +108,35 @@ const EventSchema = new Schema<IEvent>(
     },
     {
         timestamps: true, // Auto-generate createdAt and updatedAt
+        toJSON: { virtuals: true },   // include virtuals when doc is converted to JSON
+        toObject: { virtuals: true }, // include virtuals when doc is converted to object
     }
 );
 
+// Virtual getter to map `id` to `_id` (string)
+EventSchema.virtual('id').get(function () {
+    // this._id can be an ObjectId or a string; convert to string safely
+    // @ts-ignore - `this` is a mongoose document
+    const rawId = this._id;
+    return rawId && rawId.toHexString ? rawId.toHexString() : String(rawId);
+});
+
 // Pre-save hook for slug generation and data normalization
 EventSchema.pre('save', function (next) {
-    const event = this as IEvent;
+    const event = this as IEvent & { isModified(key: string): boolean; isNew: boolean; slug?: string; date?: string; time?: string };
 
     // Generate slug only if title changed or document is new
-    if (event.isModified('title') || event.isNew) {
-        event.slug = generateSlug(event.title);
+    if ((event as any).isModified?.('title') || (event as any).isNew) {
+        event.slug = generateSlug((event as any).title);
     }
 
     // Normalize date to ISO format if it's not already
-    if (event.isModified('date')) {
+    if ((event as any).isModified?.('date')) {
         event.date = normalizeDate(event.date);
     }
 
     // Normalize time format (HH:MM)
-    if (event.isModified('time')) {
+    if ((event as any).isModified?.('time')) {
         event.time = normalizeTime(event.time);
     }
 
@@ -178,8 +190,8 @@ function normalizeTime(timeString: string): string {
     return `${hours.toString().padStart(2, '0')}:${minutes}`;
 }
 
-// Create unique index on slug for better performance
-
+// Create unique index on slug for better performance and uniqueness
+EventSchema.index({ slug: 1 }, { unique: true });
 
 // Create compound index for common queries
 EventSchema.index({ date: 1, mode: 1 });

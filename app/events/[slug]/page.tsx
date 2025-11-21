@@ -53,7 +53,7 @@ const EventDetailsPage = async ({params} : { params : Promise<{slug: string}>}) 
         }
 
         const response = await request.json();
-        event = response.event;
+        event = response.event as IEvent
 
         if (!event) {
             return notFound()
