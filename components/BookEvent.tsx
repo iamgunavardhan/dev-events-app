@@ -12,20 +12,49 @@ export const BookEvent = ({eventId, slug} :{eventId: string, slug: string}) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // quick client-side validation — avoid sending empty values
+        if (!eventId || !slug) {
+            console.error('Booking aborted: missing eventId or slug', { eventId, slug });
+            setError('Event information missing. Please refresh the page.');
+            return;
+        }
+        if (!email || !email.trim()) {
+            setError('Please enter a valid email address.');
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
 
-        const {success, error} = await createBooking({eventId, slug, email});
-        if (success) {
-            setSubmitted(true);
-            posthog.capture('event booked',{eventId, slug});
-        } else {
-            console.error('Booking Creation failed', error);
-            posthog.captureException(error)
-            setError('Failed to book event. Please try again.');
+        // log payload for debugging
+        const payload = { eventId: String(eventId), slug: String(slug), email: email.trim() };
+        console.log('Booking payload ->', payload);
+
+        try {
+            // call your existing server helper
+            const { success, error: respError } = await createBooking(payload);
+
+            console.log('createBooking response ->', { success, respError });
+
+            if (success) {
+                setSubmitted(true);
+                posthog.capture('event booked', { eventId, slug });
+            } else {
+                // show the server-provided error if available
+                console.error('Booking Creation failed', respError);
+                posthog.captureException(respError);
+                setError(respError?.message ?? String(respError) ?? 'Failed to book event. Please try again.');
+            }
+        } catch (err: any) {
+            console.error('Unexpected error during booking:', err);
+            posthog.captureException(err);
+            setError('Unexpected error. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
-    }
+    };
+
     return (
         <div id="book-event">
             {submitted ? (

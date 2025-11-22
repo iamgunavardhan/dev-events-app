@@ -1,8 +1,7 @@
 'use server';
 
-
 import connectDB from '@/lib/mongodb';
-import {Booking} from "@/database";
+import { Booking } from "@/database";
 
 export const createBooking = async (
     { eventId, slug, email }: { eventId: string; slug: string; email: string }
@@ -27,8 +26,12 @@ export const createBooking = async (
             return { success: false, error: 'You have already booked this event' };
         }
 
-        const booking = await Booking.create({ eventId, slug, email })
-        return { success: true, booking: booking.toObject() };
+        const booking = await Booking.create({ eventId, slug, email });
+
+        // ⭐ FIX: Ensure JSON-safe serializable object
+        const safeBooking = JSON.parse(JSON.stringify(booking));
+
+        return { success: true, booking: safeBooking };
     } catch (e) {
         console.error('create booking failed', e);
         return { success: false, error: 'Failed to create booking. Please try again.' };
