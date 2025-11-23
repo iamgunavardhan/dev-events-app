@@ -32,7 +32,6 @@ const EventSchema = new Schema<IEvent>(
         },
         slug: {
             type: String,
-            unique: true,
             lowercase: true,
             trim: true,
         },
@@ -118,6 +117,7 @@ EventSchema.virtual('id').get(function () {
     // this._id can be an ObjectId or a string; convert to string safely
     // @ts-ignore - `this` is a mongoose document
     const rawId = this._id;
+    // @ts-ignore
     return rawId && rawId.toHexString ? rawId.toHexString() : String(rawId);
 });
 
@@ -209,7 +209,7 @@ function normalizeTime(timeString: string): string {
 
 // Create unique index on slug for better performance and uniqueness
 // Make index creation background-friendly to avoid startup blocking errors
-//EventSchema.index({ slug: 1 }, { unique: true, background: true });
+EventSchema.index({ slug: 1 }, { unique: true, background: true });
 
 // Create compound index for common queries
 EventSchema.index({ date: 1, mode: 1 });
