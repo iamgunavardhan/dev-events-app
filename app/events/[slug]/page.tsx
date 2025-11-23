@@ -8,7 +8,7 @@ const EventDetailsPage = ({ params }: { params: { slug: string } }) => {
         <main>
             <Suspense fallback={<div>Loading event details…</div>}>
                 {/* EventDetails is an async Server Component that accepts slug: string */}
-                {/* @ts-expect-error Async Server Component */}
+
                 <EventDetails slug={slug} />
             </Suspense>
         </main>

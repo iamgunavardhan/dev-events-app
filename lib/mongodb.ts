@@ -14,9 +14,7 @@ declare global {
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
-
-
-// Initialize the cache on the global object to persist across hot reloads in development
+// Initialize the cache on the global object
 let cached: MongooseCache = global.mongoose || { conn: null, promise: null };
 
 if (!global.mongoose) {
@@ -24,39 +22,35 @@ if (!global.mongoose) {
 }
 
 /**
- * Establishes a connection to MongoDB using Mongoose.
- * Caches the connection to prevent multiple connections during development hot reloads.
- * @returns Promise resolving to the Mongoose instance
+ * Connect to MongoDB with environment-aware autoIndex
  */
 async function connectDB(): Promise<typeof mongoose> {
-    // Return existing connection if available
     if (cached.conn) {
         return cached.conn;
     }
 
-    // Return existing connection promise if one is in progress
     if (!cached.promise) {
-        // Validate MongoDB URI exists
         if (!MONGODB_URI) {
             throw new Error(
                 'Please define the MONGODB_URI environment variable inside .env.local'
             );
         }
+
+        const isProd = process.env.NODE_ENV === 'production';
+
         const options = {
-            bufferCommands: false, // Disable Mongoose buffering
+            bufferCommands: false,
+            autoIndex: !isProd, // 🔥 disable automatic indexing in production
         };
 
-        // Create a new connection promise
-        cached.promise = mongoose.connect(MONGODB_URI!, options).then((mongoose) => {
+        cached.promise = mongoose.connect(MONGODB_URI, options).then((mongoose) => {
             return mongoose;
         });
     }
 
     try {
-        // Wait for the connection to establish
         cached.conn = await cached.promise;
     } catch (error) {
-        // Reset promise on error to allow retry
         cached.promise = null;
         throw error;
     }
