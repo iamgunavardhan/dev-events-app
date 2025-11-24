@@ -47,32 +47,31 @@ const EventTags = ({ tags }: { tags: string[] }) => (
 type Props = { slug: string };
 
 export default async function EventDetails({ slug }: Props) {
+    if (!slug || slug === "undefined") {
+        console.error("❌ Invalid slug:", slug);
+        return notFound();
+    }
+
     let event: any = null;
 
     try {
-        const res = await fetch(`/api/events/${encodeURIComponent(slug)}`, {
+        const res = await fetch(`/api/events/${slug}`, {
             next: { revalidate: 60 },
         });
 
         if (!res.ok) {
-            const raw = await res.text().catch(() => null);
-            console.error(`❌ Failed to fetch event for slug="${slug}" (status=${res.status})`, raw);
-            if (res.status === 404) return notFound();
-            throw new Error("Event fetch failed");
-        }
-
-        const json = await res.json().catch(() => null);
-        event = json?.data ?? json?.event ?? json;
-
-        if (!event) {
-            console.warn("⚠️ Event missing in API response:", json);
+            console.error("❌ Event fetch failed:", res.status);
             return notFound();
         }
+
+        const data = await res.json();
+        event = data?.data || data?.event;
+
+        if (!event) return notFound();
     } catch (err) {
         console.error("🚨 Error fetching event:", err);
         return notFound();
     }
-
 
     const {
         description,
@@ -89,6 +88,7 @@ export default async function EventDetails({ slug }: Props) {
     } = event;
 
     if (!description) return notFound();
+
 
     const similarEvents: IEvent[] = await getSimilarEventBySlug(slug);
 
