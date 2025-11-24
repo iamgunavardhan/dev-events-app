@@ -6,8 +6,6 @@ import { getSimilarEventBySlug } from "@/lib/actions/event.actions";
 import { IEvent } from "@/database";
 import EventCard from "@/components/EventCard";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "";
-
 const EventDetailItem = ({
                              icon,
                              alt,
@@ -55,8 +53,8 @@ export default async function EventDetails({ slug }: Props) {
     let event: any = null;
 
     try {
-        // 🔥 FIXED: Absolute URL fetch for Vercel
-        const apiURL = `${BASE_URL}/api/events/${slug}`;
+        // ✅ FIX: always use relative URL for Next.js API
+        const apiURL = `/api/events/${slug}`;
 
         const res = await fetch(apiURL, {
             next: { revalidate: 60 },
