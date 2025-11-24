@@ -1,7 +1,7 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import {BookEvent} from "@/components/BookEvent"; // ensure default export
+import { BookEvent } from "@/components/BookEvent";
 import { getSimilarEventBySlug } from "@/lib/actions/event.actions";
 import { IEvent } from "@/database";
 import EventCard from "@/components/EventCard";
@@ -55,7 +55,10 @@ export default async function EventDetails({ slug }: Props) {
     let event: any = null;
 
     try {
-        const res = await fetch(`/api/events/${slug}`, {
+        // 🔥 FIXED: Absolute URL fetch for Vercel
+        const apiURL = `${BASE_URL}/api/events/${slug}`;
+
+        const res = await fetch(apiURL, {
             next: { revalidate: 60 },
         });
 
@@ -88,7 +91,6 @@ export default async function EventDetails({ slug }: Props) {
     } = event;
 
     if (!description) return notFound();
-
 
     const similarEvents: IEvent[] = await getSimilarEventBySlug(slug);
 
