@@ -47,17 +47,10 @@ const EventTags = ({ tags }: { tags: string[] }) => (
 type Props = { slug: string };
 
 export default async function EventDetails({ slug }: Props) {
-    // ✅ Normalize and verify BASE_URL
-    const base = BASE_URL.startsWith("http") ? BASE_URL : `https://${BASE_URL}`;
-    if (!base) {
-        console.error("❌ NEXT_PUBLIC_BASE_URL is missing.");
-        return notFound();
-    }
-
     let event: any = null;
 
     try {
-        const res = await fetch(`${base}/api/events/${encodeURIComponent(slug)}`, {
+        const res = await fetch(`/api/events/${encodeURIComponent(slug)}`, {
             next: { revalidate: 60 },
         });
 
@@ -79,6 +72,7 @@ export default async function EventDetails({ slug }: Props) {
         console.error("🚨 Error fetching event:", err);
         return notFound();
     }
+
 
     const {
         description,
