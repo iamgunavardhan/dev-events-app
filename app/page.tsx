@@ -3,18 +3,18 @@ import ExploreBtn from "@/components/ExploreBtn";
 import { IEvent } from "@/database";
 
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+const base = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL || "http://localhost:3000";
 
 export default async function Page() {
 
 
     try {
-        if (!BASE_URL) {
+        if (!base) {
             throw new Error("Environment variable NEXT_PUBLIC_BASE_URL is not defined.");
         }
 
-        const response = await fetch(`${BASE_URL}/api/events`, {
-            next: { revalidate: 60 },
+        const response = await fetch(`${base}/api/events`, {
+            cache: "no-store",
         });
 
         if (!response.ok) {
