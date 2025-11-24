@@ -1,3 +1,5 @@
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 import EventCard from "@/components/EventCard";
 import ExploreBtn from "@/components/ExploreBtn";
 import { IEvent } from "@/database";
