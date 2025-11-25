@@ -1,51 +1,46 @@
-# Dev Events
+# 🚀 Dev Events Platform
 
-This is a full-stack event discovery platform built with Next.js 14, TypeScript, MongoDB, and Tailwind CSS. It allows developers to browse upcoming tech events, create new events, and book participation through a simple and modern interface.
+A modern full-stack platform where developers can **discover**, **create**, and **book** tech events — powered by **Next.js**, **MongoDB**, and **Cloudinary**.
 
-## Getting Started
+## ✨ Features
 
-First, run the development server:
+- 🔍 Browse developer-focused events
+- 📝 Create events with image upload (Cloudinary)
+- 📅 Agenda, tags, audience, mode & detailed event info
+- 🎟 Secure event booking system
+- 🔄 Server-side rendering, dynamic routing & server actions
+- 📡 API routes for fetching & creating events
+- 🗃 MongoDB + Mongoose for structured storage
+- 🎨 Clean UI using TailwindCSS + shadcn/ui
+- 📈 Analytics with PostHog
+- ⚡ Fully deployed on Vercel
 
+---
+
+## 🛠 Tech Stack
+
+### **Frontend**
+- Next.js 14 (App Router)
+- React
+- TypeScript
+- TailwindCSS
+- shadcn/ui
+
+### **Backend**
+- Next.js Server Actions
+- Next.js API Routes
+
+### **Database & Services**
+- MongoDB
+- Mongoose
+- Cloudinary (Images)
+
+---
+
+## 🚦 Getting Started
+
+```bash
+git clone <repo-url>
+cd dev-events
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-
-Open http://localhost:3000 with your browser to see the application.
-
-You can start editing the app by modifying files inside the `app/` directory. The project uses the Next.js App Router, so pages update automatically as you modify them.
-
-## Features
-
-- Browse featured developer events
-- Book events with email validation
-- Duplicate booking protection
-- Built with React Server Components
-- Responsive UI using Tailwind CSS
-
-## Environment Variables
-
-Create a `.env` file in the root and add:
-
-MONGODB_URI=your_mongodb_connection_string
-
-
-
-## Learn More
-
-To learn more about the tools used:
-
-Next.js Docs: https://nextjs.org/docs  
-MongoDB Docs: https://www.mongodb.com/docs/  
-Tailwind Docs: https://tailwindcss.com/docs
-
-## Deploy on Vercel
-
-The easiest way to deploy the app is using Vercel:  
-https://vercel.com/new
-
-See the Next.js deployment docs for more details:  
-https://nextjs.org/docs/app/building-your-application/deploying
