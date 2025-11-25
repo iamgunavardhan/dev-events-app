@@ -1,16 +1,11 @@
-// 🚀 Forces this route to always render dynamically on Vercel
+// app/events/[slug]/page.tsx
 export const dynamic = "force-dynamic";
 
 import { Suspense } from "react";
 import EventDetails from "@/components/EventDetails";
 
-export default function EventDetailsPage({
-                                             params,
-                                         }: {
-    params: { slug: string };
-}) {
-    const slug = params?.slug;
-
+export default async function EventDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
     if (!slug) return <div>Invalid event</div>;
 
     return (

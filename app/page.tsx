@@ -1,45 +1,25 @@
-export const fetchCache = "force-no-store";
-export const revalidate = 0;
+// app/page.tsx
 import EventCard from "@/components/EventCard";
 import ExploreBtn from "@/components/ExploreBtn";
 import { IEvent } from "@/database";
+import { getAllEvents } from "@/lib/actions/event.actions";
 
-
-const base = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL || "http://localhost:3000";
+export const dynamic = "force-dynamic"; // ensure runtime fetches (optional)
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 export default async function Page() {
-
-
     try {
-        if (!base) {
-            throw new Error("Environment variable NEXT_PUBLIC_BASE_URL is not defined.");
-        }
+        // Server-side DB call (no fetch to /api/events)
+        const events: IEvent[] = await getAllEvents();
 
-        const response = await fetch(`${base}/api/events`, {
-            cache: "no-store",
-        });
-
-        if (!response.ok) {
-            console.error(`❌ Failed to fetch events: ${response.status} ${response.statusText}`);
-            return (
-                <section className="text-center mt-20">
-                    <h2 className="text-red-500">Failed to load events (status {response.status})</h2>
-                </section>
-            );
-        }
-
-        const data = await response.json();
-
-        if (!data?.events) {
-            console.warn("⚠️ No events found in API response:", data);
+        if (!events || events.length === 0) {
             return (
                 <section className="text-center mt-20">
                     <h2>No events available.</h2>
                 </section>
             );
         }
-
-        const { events } = data;
 
         return (
             <section>
@@ -58,7 +38,7 @@ export default async function Page() {
                     <h3>Featured Events</h3>
                     <ul className="events list-none">
                         {events.map((event: IEvent) => (
-                            <li key={event.title}>
+                            <li key={event._id ? String(event._id) : event.title}>
                                 <EventCard {...event} />
                             </li>
                         ))}
@@ -67,7 +47,7 @@ export default async function Page() {
             </section>
         );
     } catch (error) {
-        console.error("🚨 Fetch error:", error);
+        console.error("🚨 Page fetch error:", error);
         return (
             <section className="text-center mt-20">
                 <h2 className="text-red-500">Something went wrong loading events.</h2>
